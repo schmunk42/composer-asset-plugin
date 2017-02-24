@@ -72,7 +72,7 @@ class PerforceTest extends BasePerforceTest
             'p4password' => 'TEST_PASSWORD',
             'filename' => 'ASSET.json',
         );
-        $this->perforce = new Perforce($repoConfig, 'port', 'path', $this->processExecutor, false,  $this->getMockIOInterface(), 'TEST');
+        $this->perforce = new Perforce($repoConfig, 'port', 'path', $this->processExecutor, false, $this->getMockIOInterface(), 'TEST');
         $password = $this->perforce->queryP4Password();
         $this->assertEquals('TEST_PASSWORD', $password);
     }
@@ -241,7 +241,7 @@ class PerforceTest extends BasePerforceTest
 
         $result = $this->perforce->getComposerInformation('//depot/branch@0.0.1');
 
-        $this->assertSame('', $result);
+        $this->assertNull($result);
     }
 
     public function testGetComposerInformationWithLabelWithStreamWithNoChange()
@@ -263,7 +263,7 @@ class PerforceTest extends BasePerforceTest
 
         $result = $this->perforce->getComposerInformation('//depot/branch@0.0.1');
 
-        $this->assertSame('', $result);
+        $this->assertNull($result);
     }
 
     public function testCheckServerExists()

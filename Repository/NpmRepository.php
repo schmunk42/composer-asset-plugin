@@ -15,6 +15,7 @@ use Composer\DependencyResolver\Pool;
 use Composer\Package\CompletePackageInterface;
 use Composer\Package\Loader\ArrayLoader;
 use Composer\Repository\ArrayRepository;
+use Fxp\Composer\AssetPlugin\Converter\NpmPackageUtil;
 use Fxp\Composer\AssetPlugin\Exception\InvalidCreateRepositoryException;
 
 /**
@@ -67,6 +68,14 @@ class NpmRepository extends AbstractAssetsRepository
     /**
      * {@inheritdoc}
      */
+    protected function buildPackageUrl($packageName)
+    {
+        return parent::buildPackageUrl(NpmPackageUtil::convertName($packageName));
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     protected function createVcsRepositoryConfig(array $data, $registryName = null)
     {
         $type = isset($data['repository']['type']) ? $data['repository']['type'] : 'vcs';
@@ -110,7 +119,7 @@ class NpmRepository extends AbstractAssetsRepository
     {
         $packages = $this->createArrayRepositoryConfig($packageConfigs);
         $repo = new ArrayRepository($packages);
-        Util::addRepositoryInstance($this->io, $this->rm, $this->repos, $name, $repo, $pool);
+        Util::addRepositoryInstance($this->io, $this->repositoryManager, $this->repos, $name, $repo, $pool);
 
         $this->providers[$name] = array();
     }
@@ -130,6 +139,7 @@ class NpmRepository extends AbstractAssetsRepository
         foreach ($packageConfigs as $version => $config) {
             $config['version'] = $version;
             $config = $this->assetType->getPackageConverter()->convert($config);
+            $config = $this->assetRepositoryManager->solveResolutions($config);
             $packages[] = $loader->load($config);
         }
 

@@ -13,14 +13,13 @@ namespace Fxp\Composer\AssetPlugin\Tests;
 
 use Composer\Composer;
 use Composer\Config;
+use Composer\DependencyResolver\Pool;
 use Composer\Installer\InstallationManager;
 use Composer\Installer\InstallerEvent;
 use Composer\IO\IOInterface;
 use Composer\Plugin\CommandEvent;
 use Composer\Repository\RepositoryManager;
 use Composer\Util\Filesystem;
-use Fxp\Composer\AssetPlugin\AssetEvents;
-use Fxp\Composer\AssetPlugin\Event\VcsRepositoryEvent;
 use Fxp\Composer\AssetPlugin\FxpAssetPlugin;
 
 /**
@@ -112,10 +111,12 @@ class FxpAssetPluginTest extends \PHPUnit_Framework_TestCase
     public function testAssetRepositories()
     {
         $this->package->expects($this->any())
-            ->method('getExtra')
+            ->method('getConfig')
             ->will($this->returnValue(array(
-                'asset-private-bower-registries' => array(
-                    'my-private-bower-server' => 'https://my-private-bower-server.tld/packages',
+                'fxp-asset' => array(
+                    'private-bower-registries' => array(
+                        'my-private-bower-server' => 'https://my-private-bower-server.tld/packages',
+                    ),
                 ),
             )));
 
@@ -309,11 +310,15 @@ class FxpAssetPluginTest extends \PHPUnit_Framework_TestCase
     public function testOptionsForAssetRegistryRepositories()
     {
         $this->package->expects($this->any())
-            ->method('getExtra')
-            ->will($this->returnValue(array('asset-registry-options' => array(
-                'npm-option1' => 'value 1',
-                'bower-option1' => 'value 2',
-            ))));
+            ->method('getConfig')
+            ->will($this->returnValue(array(
+                'fxp-asset' => array(
+                    'registry-options' => array(
+                        'npm-option1' => 'value 1',
+                        'bower-option1' => 'value 2',
+                    ),
+                ),
+            )));
 
         $this->plugin->activate($this->composer, $this->io);
     }
@@ -324,16 +329,19 @@ class FxpAssetPluginTest extends \PHPUnit_Framework_TestCase
             ->method('getExtra')
             ->will($this->returnValue(array()));
 
-        $this->assertCount(3, $this->plugin->getSubscribedEvents());
+        $this->assertCount(2, $this->plugin->getSubscribedEvents());
         $this->assertCount(0, $this->composer->getRepositoryManager()->getRepositories());
 
-        $event = new VcsRepositoryEvent(AssetEvents::ADD_VCS_REPOSITORIES, array(
-            array('type' => 'npm-vcs', 'url' => 'http://foo.tld', 'name' => 'foo'),
-        ));
-        /* @var InstallerEvent $eventInstaller */
+        /* @var InstallerEvent|\PHPUnit_Framework_MockObject_MockObject  $eventInstaller */
         $eventInstaller = $this->getMockBuilder('Composer\Installer\InstallerEvent')
             ->disableOriginalConstructor()
             ->getMock();
+        $eventInstaller->expects($this->any())
+            ->method('getPool')
+            ->will($this->returnValue($this->getMockBuilder(Pool::class)
+                ->disableOriginalConstructor()
+                ->getMock()
+            ));
         /* @var CommandEvent|\PHPUnit_Framework_MockObject_MockObject $eventCommand */
         $eventCommand = $this->getMockBuilder('Composer\Plugin\CommandEvent')
             ->disableOriginalConstructor()
@@ -343,11 +351,8 @@ class FxpAssetPluginTest extends \PHPUnit_Framework_TestCase
             ->will($this->returnValue('show'));
 
         $this->plugin->activate($this->composer, $this->io);
-        $this->assertCount(2, $this->composer->getRepositoryManager()->getRepositories());
-        $this->plugin->onAddVcsRepositories($event);
         $this->plugin->onPluginCommand($eventCommand);
         $this->plugin->onPreDependenciesSolving($eventInstaller);
-        $this->assertCount(3, $this->composer->getRepositoryManager()->getRepositories());
     }
 
     public function testAssetInstallers()
@@ -361,5 +366,13 @@ class FxpAssetPluginTest extends \PHPUnit_Framework_TestCase
 
         $this->assertInstanceOf('Fxp\Composer\AssetPlugin\Installer\BowerInstaller', $im->getInstaller('bower-asset-library'));
         $this->assertInstanceOf('Fxp\Composer\AssetPlugin\Installer\AssetInstaller', $im->getInstaller('npm-asset-library'));
+    }
+
+    public function testGetConfig()
+    {
+        $this->plugin->activate($this->composer, $this->io);
+
+        $config = $this->plugin->getConfig();
+        $this->assertInstanceOf(\Fxp\Composer\AssetPlugin\Config\Config::class, $config);
     }
 }

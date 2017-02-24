@@ -21,6 +21,14 @@ use Fxp\Composer\AssetPlugin\Package\Version\VersionParser;
 abstract class SemverUtil
 {
     /**
+     * @var string[]
+     */
+    private static $cleanPatterns = array(
+        '-npm-packages',
+        '-bower-packages',
+    );
+
+    /**
      * Replace the alias version (x or *) by integer.
      *
      * @param string $version
@@ -36,6 +44,23 @@ abstract class SemverUtil
     }
 
     /**
+     * Converts the date or datetime version.
+     *
+     * @param string $version The version
+     *
+     * @return string
+     */
+    public static function convertDateVersion($version)
+    {
+        if (preg_match('/^\d{7,}\./', $version)) {
+            $pos = strpos($version, '.');
+            $version = substr($version, 0, $pos).self::convertDateMinorVersion(substr($version, $pos + 1));
+        }
+
+        return $version;
+    }
+
+    /**
      * Converts the version metadata.
      *
      * @param string $version
@@ -44,9 +69,11 @@ abstract class SemverUtil
      */
     public static function convertVersionMetadata($version)
     {
-        if (preg_match_all(self::createPattern('([a-z]+|(\-|\+)[a-z]+|(\-|\+)[0-9]+)'),
+        $version = str_replace(self::$cleanPatterns, '', $version);
+
+        if (preg_match_all(self::createPattern('([a-zA-Z]+|(\-|\+)[a-zA-Z]+|(\-|\+)[0-9]+)'),
             $version, $matches, PREG_OFFSET_CAPTURE)) {
-            list($type, $version, $end) = self::cleanVersion($version, $matches);
+            list($type, $version, $end) = self::cleanVersion(strtolower($version), $matches);
             list($version, $patchVersion) = self::matchVersion($version, $type);
 
             $matches = array();
@@ -131,7 +158,8 @@ abstract class SemverUtil
     {
         $patchVersion = true;
 
-        if ('dev' === $type) {
+        if (in_array($type, array('dev', 'snapshot'))) {
+            $type = 'dev';
             $patchVersion = false;
         } elseif ('a' === $type) {
             $type = 'alpha';
@@ -144,5 +172,21 @@ abstract class SemverUtil
         $version .= $type;
 
         return array($version, $patchVersion);
+    }
+
+    /**
+     * Convert the minor version of date.
+     *
+     * @param string $minor The minor version
+     *
+     * @return string
+     */
+    protected static function convertDateMinorVersion($minor)
+    {
+        $split = explode('.', $minor);
+        $minor = (int) $split[0];
+        $revision = isset($split[1]) ? (int) $split[1] : 0;
+
+        return '.'.sprintf('%03d', $minor).sprintf('%03d', $revision);
     }
 }

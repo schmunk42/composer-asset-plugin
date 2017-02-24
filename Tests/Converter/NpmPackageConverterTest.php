@@ -29,7 +29,7 @@ class NpmPackageConverterTest extends AbstractPackageConverterTest
         /* @var AssetTypeInterface $type */
         $type = $this->type;
         $this->converter = new NpmPackageConverter($type);
-        $this->asset = (array) json_decode(file_get_contents(__DIR__.'/../Fixtures/package/npm.json'), true);
+        $this->asset = $this->loadPackage();
     }
 
     public function testConvert()
@@ -82,7 +82,8 @@ class NpmPackageConverterTest extends AbstractPackageConverterTest
             'ASSET/test-library17-file' => '*',
             'ASSET/test-library18-file' => '1.2.3',
             'ASSET/test-library19-file' => '*',
-            'ASSET/library20' => '1 || 2',
+            'ASSET/test-library20-file' => '*',
+            'ASSET/library21' => '1 || 2',
         ), $composer['require']);
 
         $this->assertArrayHasKey('require-dev', $composer);
@@ -95,7 +96,7 @@ class NpmPackageConverterTest extends AbstractPackageConverterTest
         ), $validDevRequires);
 
         $this->assertArrayHasKey('bin', $composer);
-        $this->assertTrue(is_array($composer['bin']));
+        $this->assertInternalType('array', $composer['bin']);
         $this->assertSame($this->asset['bin'], $composer['bin'][0]);
 
         $this->assertArrayHasKey('extra', $composer);
@@ -164,6 +165,26 @@ class NpmPackageConverterTest extends AbstractPackageConverterTest
         $this->assertArrayNotHasKey('archive', $composer);
     }
 
+    public function testConvertWithScope()
+    {
+        $this->asset = $this->loadPackage('npm-scope.json');
+        $composer = $this->converter->convert($this->asset);
+
+        $this->assertArrayHasKey('name', $composer);
+        $this->assertSame('ASSET/scope--test', $composer['name']);
+
+        $this->assertArrayHasKey('require', $composer);
+        $this->assertSame(array(
+            'ASSET/scope--library1' => '>= 1.0.0',
+            'ASSET/scope2--library2' => '>= 1.0.0',
+        ), $composer['require']);
+
+        $this->assertArrayHasKey('require-dev', $composer);
+        $this->assertSame(array(
+            'ASSET/scope3--dev-library1' => '>= 1.0.0',
+        ), $composer['require-dev']);
+    }
+
     public function getConvertDistData()
     {
         return array(
@@ -183,5 +204,17 @@ class NpmPackageConverterTest extends AbstractPackageConverterTest
     public function testConvertDist($value, $result)
     {
         $this->assertSame($result, NpmPackageUtil::convertDist($value));
+    }
+
+    /**
+     * Load the package.
+     *
+     * @param string $package The package file name
+     *
+     * @return array
+     */
+    private function loadPackage($package = 'npm.json')
+    {
+        return (array) json_decode(file_get_contents(__DIR__.'/../Fixtures/package/'.$package), true);
     }
 }

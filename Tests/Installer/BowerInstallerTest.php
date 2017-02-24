@@ -11,16 +11,17 @@
 
 namespace Fxp\Composer\AssetPlugin\Tests\Installer;
 
-use Composer\Downloader\DownloadManager;
-use Composer\IO\IOInterface;
-use Composer\Package\PackageInterface;
-use Composer\Package\Package;
-use Composer\Package\RootPackageInterface;
-use Composer\Repository\InstalledRepositoryInterface;
-use Composer\Util\Filesystem;
-use Composer\TestCase;
 use Composer\Composer;
 use Composer\Config;
+use Composer\Downloader\DownloadManager;
+use Composer\IO\IOInterface;
+use Composer\Package\Package;
+use Composer\Package\PackageInterface;
+use Composer\Package\RootPackageInterface;
+use Composer\Repository\InstalledRepositoryInterface;
+use Composer\TestCase;
+use Composer\Util\Filesystem;
+use Fxp\Composer\AssetPlugin\Config\ConfigBuilder;
 use Fxp\Composer\AssetPlugin\Installer\BowerInstaller;
 use Fxp\Composer\AssetPlugin\Type\AssetTypeInterface;
 use Fxp\Composer\AssetPlugin\Util\AssetPlugin;
@@ -147,7 +148,7 @@ class BowerInstallerTest extends TestCase
         $this->fs->removeDirectory($this->vendorDir);
         $this->composer->setPackage($rootPackage);
 
-        new BowerInstaller($io, $this->composer, $type);
+        new BowerInstaller(ConfigBuilder::build($this->composer), $io, $this->composer, $type);
         $this->assertFileNotExists($this->vendorDir);
     }
 
@@ -163,7 +164,7 @@ class BowerInstallerTest extends TestCase
         $this->fs->removeDirectory($this->binDir);
         $this->composer->setPackage($rootPackage);
 
-        new BowerInstaller($io, $this->composer, $type);
+        new BowerInstaller(ConfigBuilder::build($this->composer), $io, $this->composer, $type);
         $this->assertFileNotExists($this->binDir);
     }
 
@@ -178,7 +179,7 @@ class BowerInstallerTest extends TestCase
 
         $this->composer->setPackage($rootPackage);
 
-        $library = new BowerInstaller($io, $this->composer, $type);
+        $library = new BowerInstaller(ConfigBuilder::build($this->composer), $io, $this->composer, $type);
         /* @var \PHPUnit_Framework_MockObject_MockObject $package */
         $package = $this->createPackageMock();
         $package
@@ -218,10 +219,12 @@ class BowerInstallerTest extends TestCase
         return array(
             array(array()),
             array(array(
-                'asset-main-files' => array(
-                    'foo-asset/bar' => array(
-                        'foo',
-                        'bar',
+                'fxp-asset' => array(
+                    'main-files' => array(
+                        'foo-asset/bar' => array(
+                            'foo',
+                            'bar',
+                        ),
                     ),
                 ),
             )),
@@ -244,7 +247,7 @@ class BowerInstallerTest extends TestCase
 
         $this->composer->setPackage($rootPackage);
 
-        $library = new BowerInstaller($io, $this->composer, $type);
+        $library = new BowerInstaller(ConfigBuilder::build($this->composer), $io, $this->composer, $type);
         /* @var \PHPUnit_Framework_MockObject_MockObject $package */
         $package = $this->createPackageMock($ignoreFiles);
         $package
@@ -294,7 +297,7 @@ class BowerInstallerTest extends TestCase
 
         $this->composer->setPackage($rootPackage);
 
-        $library = new BowerInstaller($io, $this->composer, $type);
+        $library = new BowerInstaller(ConfigBuilder::build($this->composer), $io, $this->composer, $type);
         /* @var \PHPUnit_Framework_MockObject_MockObject $package */
         $package = $this->createPackageMock($ignoreFiles);
         $package
@@ -337,7 +340,7 @@ class BowerInstallerTest extends TestCase
 
         $this->composer->setPackage($rootPackage);
 
-        $library = new BowerInstaller($io, $this->composer, $type);
+        $library = new BowerInstaller(ConfigBuilder::build($this->composer), $io, $this->composer, $type);
         $package = $this->createPackageMock();
 
         /* @var \PHPUnit_Framework_MockObject_MockObject $package */
@@ -384,7 +387,7 @@ class BowerInstallerTest extends TestCase
 
         $this->composer->setPackage($rootPackage);
 
-        $library = new BowerInstaller($io, $this->composer, $type);
+        $library = new BowerInstaller(ConfigBuilder::build($this->composer), $io, $this->composer, $type);
         $package = $this->createPackageMock();
 
         /* @var \PHPUnit_Framework_MockObject_MockObject $package */
@@ -421,7 +424,7 @@ class BowerInstallerTest extends TestCase
 
         $this->composer->setPackage($rootPackage);
 
-        $library = new BowerInstaller($io, $this->composer, $type);
+        $library = new BowerInstaller(ConfigBuilder::build($this->composer), $io, $this->composer, $type);
         $package = $this->createPackageMock();
 
         /* @var \PHPUnit_Framework_MockObject_MockObject $package */
@@ -453,12 +456,14 @@ class BowerInstallerTest extends TestCase
         /* @var RootPackageInterface $rootPackage */
         $rootPackage = $this->createRootPackageMock($mainFiles);
         $this->composer->setPackage($rootPackage);
+        $config = ConfigBuilder::build($this->composer);
 
         $package = new Package('foo-asset/bar', '1.0.0', '1.0.0');
-        $package = AssetPlugin::addMainFiles($this->composer, $package);
+        $package = AssetPlugin::addMainFiles($config, $package);
         $extra = $package->getExtra();
-        if (isset($mainFiles['asset-main-files'])) {
-            $this->assertEquals($extra['bower-asset-main'], $mainFiles['asset-main-files']['foo-asset/bar']);
+
+        if (isset($mainFiles['fxp-asset']['main-files'])) {
+            $this->assertEquals($extra['bower-asset-main'], $mainFiles['fxp-asset']['main-files']['foo-asset/bar']);
         } else {
             $this->assertEquals($extra, array());
         }
@@ -498,7 +503,7 @@ class BowerInstallerTest extends TestCase
 
         $package
             ->expects($this->any())
-            ->method('getExtra')
+            ->method('getConfig')
             ->will($this->returnValue($mainFiles));
 
         return $package;

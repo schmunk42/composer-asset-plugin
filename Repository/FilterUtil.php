@@ -15,6 +15,7 @@ use Composer\Package\Link;
 use Composer\Package\Package;
 use Composer\Package\RootPackageInterface;
 use Composer\Semver\Constraint\ConstraintInterface;
+use Fxp\Composer\AssetPlugin\Config\Config;
 use Fxp\Composer\AssetPlugin\Package\Version\VersionParser;
 
 /**
@@ -110,18 +111,15 @@ class FilterUtil
     }
 
     /**
-     * Check the extra option.
+     * Check the config option.
      *
-     * @param RootPackageInterface $package The root package
-     * @param string               $name    The extra option name
+     * @param Config $config The plugin config
+     * @param string $name   The extra option name
      *
      * @return bool
      */
-    public static function checkExtraOption(RootPackageInterface $package, $name)
+    public static function checkConfigOption(Config $config, $name)
     {
-        $extra = $package->getExtra();
-
-        return !array_key_exists($name, $extra)
-        || true === $extra[$name];
+        return true === $config->get($name, true);
     }
 }

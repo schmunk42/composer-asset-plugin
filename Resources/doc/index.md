@@ -13,7 +13,7 @@ to know the Composer version required.
 ### Global scope (per user) installation
 
 ```shell
-$ composer global require "fxp/composer-asset-plugin:~1.2"
+$ composer global require "fxp/composer-asset-plugin:~1.3"
 ```
 
 ### Project scope installation
@@ -55,7 +55,7 @@ It must be prefixed with `{asset-type}-asset/`.
 You can work with your private Bower server build with
 [Hacklone Private Bower](https://github.com/Hacklone/private-bower):
 
-Adding the URL to your Private Bower Server in the `composer.json` in the section `extra`. This
+Adding the URL to your Private Bower Server in the `composer.json` in the section `config`. This
 Asset Plugin automaticly look if there is a private Bower URL defined and search for your Private
 Bower Package.
 
@@ -63,9 +63,11 @@ Bower Package.
 
 ```json
 {
-    "extra": {
-        "asset-private-bower-registries": {
-            "<YourPrivateBowerRegistryServerName>": "https://<YourPrivateBowerRegistryServerURL>/packages"
+    "config": {
+        "fxp-asset": {
+            "private-bower-registries": {
+                "<YourPrivateBowerRegistryServerName>": "https://<YourPrivateBowerRegistryServerURL>/packages"
+            }
         }
     }
 }
@@ -91,13 +93,15 @@ Add the following to your `composer.json`:
 
 ```json
 {
-    "extra": {
-        "asset-repositories": [
-            {
-                "type": "bower-vcs",
-                "url": "https://github.com/vendor/exemple-asset-name.git"
-            }
-        ]
+    "config": {
+        "fxp-asset": {
+            "repositories": [
+                {
+                    "type": "bower-vcs",
+                    "url": "https://github.com/vendor/exemple-asset-name.git"
+                }
+            ]
+        }
     }
 }
 ```
@@ -125,14 +129,16 @@ Repository.
 
 ```json
 {
-    "extra": {
-        "asset-repositories": [
-            {
-                "type": "bower-vcs",
-                "url": "https://github.com/vendor/exemple-asset-name.git",
-                "name": "bower-asset/exemple-asset-name"
-            }
-        ]
+    "config": {
+        "fxp-asset": {
+            "repositories": [
+                {
+                    "type": "bower-vcs",
+                    "url": "https://github.com/vendor/exemple-asset-name.git",
+                    "name": "bower-asset/exemple-asset-name"
+                }
+            ]
+        }
     }
 }
 ```
@@ -141,11 +147,13 @@ You can also use the standard format of Composer for naming your VCS Repository:
 
 ```json
 {
-    "extra": {
-        "asset-repositories": {
-            "bower-asset/exemple-asset-name": {
-                "type": "bower-vcs",
-                "url": "https://github.com/vendor/exemple-asset-name.git"
+    "config": {
+        "fxp-asset": {
+            "repositories": {
+                "bower-asset/exemple-asset-name": {
+                    "type": "bower-vcs",
+                    "url": "https://github.com/vendor/exemple-asset-name.git"
+                }
             }
         }
     }
@@ -223,12 +231,14 @@ Of course, several solutions can work around the problem (see the [FAQs]
 solution below may be used in another use case.
 
 You can disable the import filter using the versions of installed packages with the option
-`extra.asset-optimize-with-installed-packages` in the root Composer package:
+`config.fxp-asset.optimize-with-installed-packages` in the root Composer package:
 
 ```json
 {
-    "extra": {
-        "asset-optimize-with-installed-packages": false
+    "config": {
+        "fxp-asset": {
+            "optimize-with-installed-packages": false
+        }
     }
 }
 ```
@@ -242,8 +252,10 @@ performance. However, it is possible to change the pattern or to disable this fe
 
 ```json
 {
-    "extra": {
-        "asset-pattern-skip-version": "(-build)"
+    "config": {
+        "fxp-asset": {
+            "pattern-skip-version": "(-build)"
+        }
     }
 }
 ```
@@ -252,8 +264,10 @@ performance. However, it is possible to change the pattern or to disable this fe
 
 ```json
 {
-    "extra": {
-        "asset-pattern-skip-version": false
+    "config": {
+        "fxp-asset": {
+            "pattern-skip-version": false
+        }
     }
 }
 ```
@@ -261,12 +275,14 @@ performance. However, it is possible to change the pattern or to disable this fe
 #### Disable the conjunctive option of the import filter
 
 You can disable the `conjunctive` mode of the import filter with the option
-`extra.asset-optimize-with-conjunctive` in the root Composer package:
+`config.fxp-asset.optimize-with-conjunctive` in the root Composer package:
 
 ```json
 {
-    "extra": {
-        "asset-optimize-with-conjunctive": false
+    "config": {
+        "fxp-asset": {
+            "optimize-with-conjunctive": false
+        }
     }
 }
 ```
@@ -286,10 +302,12 @@ But you can change the installation directory of the assets directly in the root
 
 ```json
 {
-    "extra": {
-        "asset-installer-paths": {
-            "npm-asset-library": "web/assets/vendor",
-            "bower-asset-library": "web/assets/vendor"
+    "config": {
+        "fxp-asset": {
+            "installer-paths": {
+                "npm-asset-library": "web/assets/vendor",
+                "bower-asset-library": "web/assets/vendor"
+            }
         }
     }
 }
@@ -308,9 +326,11 @@ installation of each package. Of course, this behavior can be disabled or replac
 
 ```json
 {
-    "extra": {
-        "asset-ignore-files": {
-            "bower-asset/example-asset1": false
+    "config": {
+        "fxp-asset": {
+            "ignore-files": {
+                "bower-asset/example-asset1": false
+            }
         }
     }
 }
@@ -320,13 +340,15 @@ installation of each package. Of course, this behavior can be disabled or replac
 
 ```json
 {
-    "extra": {
-        "asset-ignore-files": {
-            "bower-asset/example-asset1": [
-                ".*",
-                "*.md",
-                "test"
-            ]
+    "config": {
+        "fxp-asset": {
+            "ignore-files": {
+                "bower-asset/example-asset1": [
+                    ".*",
+                    "*.md",
+                    "test"
+                ]
+            }
         }
     }
 }
@@ -339,17 +361,32 @@ delete the files:
 
 ```json
 {
-    "extra": {
-        "asset-ignore-files": {
-            "npm-asset/example-asset1": [
-                ".*",
-                "*.md",
-                "test"
-            ]
+    "config": {
+        "fxp-asset": {
+            "ignore-files": {
+                "npm-asset/example-asset1": [
+                    ".*",
+                    "*.md",
+                    "test"
+                ]
+            }
         }
     }
 }
 ```
+
+### Work with the NPM scopes
+
+NPM can manage the package with the vendor scopes (`@<vendor>/<dependency-name>`),
+but Composer has already a namespace for vendors, and this plugin create a virtual
+vendor for the NPM assets (`npm-asset/`). Futhermore, the `@` character is not
+managed by Composer for the package name.
+
+For this reason, the NPM scope `@<vendor>/` is converted into `<vendor>--`.
+
+NPM package name              | Composer package name
+------------------------------|-----------------------------------------
+`@<vendor>/<dependency-name>` | `npm-asset/<vendor>--<dependency-name>`
 
 ### Use the Ignore Files Manager in the Composer scripts
 
@@ -370,13 +407,15 @@ Package. To do this, you can use the script helper
             "Fxp\\Composer\\AssetPlugin\\Composer\\ScriptHandler::deleteIgnoredFiles"
         ]
     },
-    "extra": {
-        "asset-ignore-files": {
-            "acme/other-asset": [
-                ".*",
-                "*.md",
-                "test"
-            ]
+    "config": {
+        "fxp-asset": {
+            "ignore-files": {
+                "acme/other-asset": [
+                    ".*",
+                    "*.md",
+                    "test"
+                ]
+            }
         }
     }
 }
@@ -390,18 +429,20 @@ plugins like main-bower-files, wiredep and asset-builder have a feature to
 override the package main files in the project configuration file.
 
 You can do the same with composer-asset-plugin, just add a section
-`asset-main-files` in the root project `composer.json` file with the package
+`config.fxp-asset.main-files` in the root project `composer.json` file with the package
 name and the files you want to mark as main files.
 
 **Example:**
 
 ```json
 {
-    "extra": {
-        "asset-main-files": {
-            "acme/other-asset": [
-                "other-asset.js"
-            ]
+    "config": {
+        "fxp-asset": {
+            "main-files": {
+                "acme/other-asset": [
+                    "other-asset.js"
+                ]
+            }
         }
     }
 }
@@ -409,18 +450,20 @@ name and the files you want to mark as main files.
 
 ### Disable the search for an asset registry
 
-If you want to disable the search for an asset registry, you can add an extra
-option `extra.asset-registry-options.{type}-searchable` in the root project
+If you want to disable the search for an asset registry, you can add the
+option `config.fxp-asset.registry-options.{type}-searchable` in the root project
 `composer.json`-file.
 
 **Example:**
 
 ```json
 {
-    "extra": {
-        "asset-registry-options": {
-            "npm-searchable": false,
-            "bower-searchable": false
+    "config": {
+        "fxp-asset": {
+            "registry-options": {
+                "npm-searchable": false,
+                "bower-searchable": false
+            }
         }
     }
 }
@@ -429,17 +472,19 @@ option `extra.asset-registry-options.{type}-searchable` in the root project
 ### Use no-api option of VCS Githhub driver
 
 If you want to use the [no-api](https://getcomposer.org/doc/05-repositories.md#git-alternatives) option
-for your Github assets, you can add an extra option `extra.asset-vcs-driver-options.github-no-api` in
-the root project `composer.json` file. By default, this option is to `false`. The option `asset-pattern-skip-version`
+for your Github assets, you can add the option `config.fxp-asset.vcs-driver-options.github-no-api` in
+the root project `composer.json` file. By default, this option is to `false`. The option `config.fxp-asset.pattern-skip-version`
 can be used to exclude tags via a regular expression.
 
 ```json
 {
-    "extra": {
-        "asset-vcs-driver-options": {
-            "github-no-api": true
-        },
-        "asset-pattern-skip-version": "(-build|-patch)"
+    "config": {
+        "fxp-asset": {
+            "vcs-driver-options": {
+                "github-no-api": true
+            },
+            "pattern-skip-version": "(-build|-patch)"
+        }
     }
 }
 ```
@@ -448,12 +493,14 @@ You can further define this option for each package:
 
 ```json
 {
-    "extra": {
-        "asset-vcs-driver-options": {
-            "github-no-api": {
-                "default": true,
-                "packages": {
-                    "bower-asset/example-asset1": false
+    "config": {
+        "fxp-asset": {
+            "vcs-driver-options": {
+                "github-no-api": {
+                    "default": true,
+                    "packages": {
+                        "bower-asset/example-asset1": false
+                    }
                 }
             }
         }
@@ -463,3 +510,132 @@ You can further define this option for each package:
 
 With this configuration, all your github packages will use the native Git, except for
 the `bower-asset/example-asset1` package.
+
+### Solve the conflicts of asset dependencies
+
+Bower include a [resolution section](https://jaketrent.com/post/bower-resolutions) to
+solve the conflicts between 2 same dependencies but with different versions.
+
+As for NPM, it's possible to install several versions of the same dependency by different
+dependencies, which is not the case for Bower and Composer. Only the installation of a
+single version compatible for all dependencies is possible.
+
+The dependency resolution would force (replace) a version or range version directly in the
+root Composer package.
+
+**Example:**
+```json
+    "name": "foo/bar",
+    "require": {
+        "bower-asset/jquery": "^2.2.0"
+    }
+```
+```json
+    "name": "bar/baz",
+    "require": {
+        "bower-asset/jquery": "2.0.*"
+    }
+```
+```json
+    "name": "root/package",
+    "require": {
+        "foo/bar": "^1.0.0",
+        "bar/baz": "^1.0.0"
+    }
+    "config": {
+        "fxp-asset": {
+            "resolutions": {
+                "bower-asset/jquery": "^3.0.0"
+            }
+        }
+    }
+```
+
+Result, all asset packages with the `bower-asset/jquery` dependency will use the `^3.0.0` range version.
+
+> **Note:**
+> Be careful when replacing the version, and check the compatibility before.
+
+### Define the config for all projects
+
+You can define each option (`config.fxp-asset.*`) in each project in the `composer.json`
+file of each project, but you can also set an option for all projects.
+
+To do this, you simply need to add your options in the Composer global configuration,
+in the file of your choice:
+
+- `<COMPOSER_HOME>/composer.json` file
+- `<COMPOSER_HOME>/config.json` file
+
+> **Note:**
+> The `composer global config` command cannot be used, bacause Composer does not accept custom options.
+> But you can use the command `composer global config -e` to edit the global `composer.json`
+file with your text editor.
+
+### Define the config in a environment variable
+
+You can define each option (`config.fxp-asset.*`) directly in the PHP environment variables. For
+this, all variables will start with `FXP_ASSET__` and uppercased, and each `-` will replaced by `_`.
+
+The accepted value types are:
+
+- string
+- boolean
+- integer
+- JSON array or object
+
+**Example:**
+```json
+{
+    "config": {
+        "fxp-asset": {
+            "pattern-skip-version": "(-patch)"
+        }
+    }
+}
+```
+
+Can be overrided by `FXP_ASSET__PATTERN_SKIP_VERSION="(-build)"` environment variable.
+
+### Config priority order
+
+The config values are retrieved in priority in:
+
+1. the environment variables starting with `FXP_ASSET__`
+2. the project `composer.json` file
+3. the global `<COMPOSER_HOME>/config.json` file
+4. the global `<COMPOSER_HOME>/composer.json` file
+5. the deprecated config `extra.asset-*` of the project `composer.json` file
+
+### Disable the plugin
+
+When you working on multiple PHP projects, you do not necessarily need to use the plugin. It's
+possible to disable the plugin with the `config.fxp-asset.enabled` option with the `false` value.
+
+For example, you can disable the plugin globally (for all your projects), and enable it only
+for projects requiring the plugin.
+
+**Example:**
+```json
+// The global <COMPOSER_HOME>/config.json file
+{
+    "config": {
+        "fxp-asset": {
+            "enabled": false
+        }
+    }
+}
+```
+```json
+// The project composer.json file
+{
+    "config": {
+        "fxp-asset": {
+            "enabled": true
+        }
+    }
+}
+```
+
+> **Note:**
+> If you disable the plugin, and your project require this plugin, Composer will throw an exception indicating that the asset dependencies does not exist.

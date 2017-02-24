@@ -13,12 +13,13 @@ namespace Fxp\Composer\AssetPlugin\Repository;
 
 use Composer\Installer\InstallationManager;
 use Composer\Package\Link;
+use Composer\Package\Loader\ArrayLoader;
 use Composer\Package\Package;
 use Composer\Package\PackageInterface;
 use Composer\Package\RootPackageInterface;
-use Composer\Package\Loader\ArrayLoader;
-use Composer\Semver\Constraint\MultiConstraint;
 use Composer\Repository\InstalledFilesystemRepository;
+use Composer\Semver\Constraint\MultiConstraint;
+use Fxp\Composer\AssetPlugin\Config\Config;
 use Fxp\Composer\AssetPlugin\Package\Version\VersionParser;
 use Fxp\Composer\AssetPlugin\Type\AssetTypeInterface;
 
@@ -30,6 +31,11 @@ use Fxp\Composer\AssetPlugin\Type\AssetTypeInterface;
  */
 class VcsPackageFilter
 {
+    /**
+     * @var Config
+     */
+    protected $config;
+
     /**
      * @var RootPackageInterface
      */
@@ -68,12 +74,14 @@ class VcsPackageFilter
     /**
      * Constructor.
      *
+     * @param Config                             $config              The plugin config
      * @param RootPackageInterface               $package             The root package
      * @param InstallationManager                $installationManager The installation manager
      * @param InstalledFilesystemRepository|null $installedRepository The installed repository
      */
-    public function __construct(RootPackageInterface $package, InstallationManager $installationManager, InstalledFilesystemRepository $installedRepository = null)
+    public function __construct(Config $config, RootPackageInterface $package, InstallationManager $installationManager, InstalledFilesystemRepository $installedRepository = null)
     {
+        $this->config = $config;
         $this->package = $package;
         $this->installationManager = $installationManager;
         $this->installedRepository = $installedRepository;
@@ -172,17 +180,11 @@ class VcsPackageFilter
      */
     protected function skipByPattern()
     {
-        $extra = $this->package->getExtra();
+        $skip = $this->config->get('pattern-skip-version', false);
 
-        if (!array_key_exists('asset-pattern-skip-version', $extra)) {
-            $extra['asset-pattern-skip-version'] = false;
-        }
-
-        if (is_string($extra['asset-pattern-skip-version'])) {
-            return trim($extra['asset-pattern-skip-version'], '/');
-        }
-
-        return false;
+        return is_string($skip)
+            ? trim($skip, '/')
+            : false;
     }
 
     /**
@@ -262,7 +264,7 @@ class VcsPackageFilter
         );
 
         if (null !== $this->installedRepository
-                && FilterUtil::checkExtraOption($this->package, 'asset-optimize-with-installed-packages')) {
+                && FilterUtil::checkConfigOption($this->config, 'optimize-with-installed-packages')) {
             $this->initInstalledPackages();
         }
     }
@@ -297,7 +299,7 @@ class VcsPackageFilter
         if (isset($this->requires[$package->getName()])) {
             /* @var Link $rLink */
             $rLink = $this->requires[$package->getName()];
-            $useConjunctive = FilterUtil::checkExtraOption($this->package, 'asset-optimize-with-conjunctive');
+            $useConjunctive = FilterUtil::checkConfigOption($this->config, 'optimize-with-conjunctive');
             $constraint = new MultiConstraint(array($rLink->getConstraint(), $link->getConstraint()), $useConjunctive);
             $link = new Link($rLink->getSource(), $rLink->getTarget(), $constraint, 'installed', $constraint->getPrettyString());
         }

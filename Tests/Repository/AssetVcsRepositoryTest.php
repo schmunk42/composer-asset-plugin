@@ -11,12 +11,13 @@
 
 namespace Fxp\Composer\AssetPlugin\Tests\Repository;
 
-use Composer\EventDispatcher\EventDispatcher;
 use Composer\Config;
+use Composer\EventDispatcher\EventDispatcher;
 use Composer\Package\AliasPackage;
 use Composer\Package\CompletePackage;
 use Composer\Package\PackageInterface;
 use Composer\Repository\InvalidRepositoryException;
+use Fxp\Composer\AssetPlugin\Repository\AssetRepositoryManager;
 use Fxp\Composer\AssetPlugin\Repository\AssetVcsRepository;
 use Fxp\Composer\AssetPlugin\Repository\VcsPackageFilter;
 use Fxp\Composer\AssetPlugin\Tests\Fixtures\IO\MockIO;
@@ -45,6 +46,11 @@ class AssetVcsRepositoryTest extends \PHPUnit_Framework_TestCase
     protected $io;
 
     /**
+     * @var AssetRepositoryManager
+     */
+    protected $assetRepositoryManager;
+
+    /**
      * @var AssetVcsRepository
      */
     protected $repository;
@@ -57,6 +63,15 @@ class AssetVcsRepositoryTest extends \PHPUnit_Framework_TestCase
             ->disableOriginalConstructor()
             ->getMock();
         $this->dispatcher = $dispatcher;
+        $this->assetRepositoryManager = $this->getMockBuilder(AssetRepositoryManager::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $this->assetRepositoryManager->expects($this->any())
+            ->method('solveResolutions')
+            ->willReturnCallback(function ($value) {
+                return $value;
+            });
     }
 
     protected function tearDown()
@@ -114,8 +129,8 @@ class AssetVcsRepositoryTest extends \PHPUnit_Framework_TestCase
      * @param string $url
      * @param string $class
      *
-     * @expectedException \InvalidArgumentException
-     * @expectedExceptionMessage No driver found to handle Asset VCS repository
+     * @expectedException \Composer\Repository\InvalidRepositoryException
+     * @expectedExceptionMessageRegExp /No valid (bower|package).json was found in any branch or tag of http:\/\/example.org\/foo, could not load a package from it./
      */
     public function testNotDriverFound($type, $url, $class)
     {
@@ -245,7 +260,7 @@ class AssetVcsRepositoryTest extends \PHPUnit_Framework_TestCase
             }
 
             $this->assertInstanceOf('Composer\Package\CompletePackage', $package);
-            $this->assertSame($validPackageName,  $package->getName());
+            $this->assertSame($validPackageName, $package->getName());
         }
 
         $this->assertSame($validTraces, $this->io->getTraces());
@@ -297,7 +312,7 @@ class AssetVcsRepositoryTest extends \PHPUnit_Framework_TestCase
             }
 
             $this->assertInstanceOf('Composer\Package\CompletePackage', $package);
-            $this->assertSame($validPackageName,  $package->getName());
+            $this->assertSame($validPackageName, $package->getName());
         }
 
         $this->assertSame($validTraces, $this->io->getTraces());
@@ -334,7 +349,7 @@ class AssetVcsRepositoryTest extends \PHPUnit_Framework_TestCase
             }
 
             $this->assertInstanceOf('Composer\Package\CompletePackage', $package);
-            $this->assertSame($validPackageName,  $package->getName());
+            $this->assertSame($validPackageName, $package->getName());
         }
 
         $this->assertSame($validTraces, $this->io->getTraces());
@@ -377,7 +392,7 @@ class AssetVcsRepositoryTest extends \PHPUnit_Framework_TestCase
             }
 
             $this->assertInstanceOf('Composer\Package\CompletePackage', $package);
-            $this->assertSame($validPackageName,  $package->getName());
+            $this->assertSame($validPackageName, $package->getName());
         }
 
         $this->assertSame($validTraces, $this->io->getTraces());
@@ -430,7 +445,7 @@ class AssetVcsRepositoryTest extends \PHPUnit_Framework_TestCase
     {
         MockVcsDriver::$supported = $supported;
         $driverType = substr($type, strpos($type, '-') + 1);
-        $repoConfig = array('type' => $type, 'url' => $url, 'name' => $registryName, 'vcs-package-filter' => $vcsPackageFilter);
+        $repoConfig = array('type' => $type, 'url' => $url, 'name' => $registryName, 'vcs-package-filter' => $vcsPackageFilter, 'asset-repository-manager' => $this->assetRepositoryManager);
 
         if (null === $drivers) {
             $drivers = array(

@@ -14,9 +14,11 @@ namespace Fxp\Composer\AssetPlugin\Composer;
 use Composer\DependencyResolver\Operation\InstallOperation;
 use Composer\DependencyResolver\Operation\OperationInterface;
 use Composer\DependencyResolver\Operation\UpdateOperation;
-use Composer\Package\PackageInterface;
 use Composer\Installer\PackageEvent;
+use Composer\Package\PackageInterface;
 use Fxp\Composer\AssetPlugin\Assets;
+use Fxp\Composer\AssetPlugin\Config\Config;
+use Fxp\Composer\AssetPlugin\FxpAssetPlugin;
 use Fxp\Composer\AssetPlugin\Installer\IgnoreFactory;
 
 /**
@@ -28,7 +30,7 @@ class ScriptHandler
 {
     /**
      * Remove ignored files of the installed package defined in the root
-     * package extra section.
+     * package config section.
      *
      * @param PackageEvent $event
      */
@@ -38,19 +40,37 @@ class ScriptHandler
             return;
         }
 
-        $section = static::getIgnoreExtraSection();
-        $manager = IgnoreFactory::create($event->getComposer(), $package, null, $section);
+        $section = static::getIgnoreConfigSection();
+        $manager = IgnoreFactory::create(static::getConfig($event), $event->getComposer(), $package, null, $section);
         $manager->cleanup();
     }
 
     /**
-     * Get the root extra section of igore file patterns for each package.
+     * Get the plugin config.
      *
-     * @return string The extra section name
+     * @param PackageEvent $event
+     *
+     * @return Config
      */
-    protected static function getIgnoreExtraSection()
+    public static function getConfig(PackageEvent $event)
     {
-        return 'asset-ignore-files';
+        foreach ($event->getComposer()->getPluginManager()->getPlugins() as $plugin) {
+            if ($plugin instanceof FxpAssetPlugin) {
+                return $plugin->getConfig();
+            }
+        }
+
+        throw new \RuntimeException('The fxp composer asset plugin is not found');
+    }
+
+    /**
+     * Get the root config section of igore file patterns for each package.
+     *
+     * @return string The config section name
+     */
+    protected static function getIgnoreConfigSection()
+    {
+        return 'ignore-files';
     }
 
     /**

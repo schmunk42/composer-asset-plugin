@@ -16,6 +16,7 @@ use Composer\Installer\LibraryInstaller;
 use Composer\IO\IOInterface;
 use Composer\Package\PackageInterface;
 use Composer\Util\Filesystem;
+use Fxp\Composer\AssetPlugin\Config\Config;
 use Fxp\Composer\AssetPlugin\Type\AssetTypeInterface;
 use Fxp\Composer\AssetPlugin\Util\AssetPlugin;
 
@@ -28,20 +29,28 @@ use Fxp\Composer\AssetPlugin\Util\AssetPlugin;
 class AssetInstaller extends LibraryInstaller
 {
     /**
+     * @var Config
+     */
+    private $config;
+
+    /**
      * Constructor.
      *
+     * @param Config             $config
      * @param IOInterface        $io
      * @param Composer           $composer
      * @param AssetTypeInterface $assetType
      * @param Filesystem         $filesystem
      */
-    public function __construct(IOInterface $io, Composer $composer, AssetTypeInterface $assetType, Filesystem $filesystem = null)
+    public function __construct(Config $config, IOInterface $io, Composer $composer, AssetTypeInterface $assetType, Filesystem $filesystem = null)
     {
         parent::__construct($io, $composer, $assetType->getComposerType(), $filesystem);
 
-        $extra = $composer->getPackage()->getExtra();
-        if (!empty($extra['asset-installer-paths'][$this->type])) {
-            $this->vendorDir = rtrim($extra['asset-installer-paths'][$this->type], '/');
+        $this->config = $config;
+        $paths = $this->config->getArray('installer-paths');
+
+        if (!empty($paths[$this->type])) {
+            $this->vendorDir = rtrim($paths[$this->type], '/');
         } else {
             $this->vendorDir = rtrim($this->vendorDir.'/'.$assetType->getComposerVendorName(), '/');
         }
@@ -82,7 +91,7 @@ class AssetInstaller extends LibraryInstaller
      */
     protected function installCode(PackageInterface $package)
     {
-        $package = AssetPlugin::addMainFiles($this->composer, $package);
+        $package = AssetPlugin::addMainFiles($this->config, $package);
 
         parent::installCode($package);
 
@@ -94,7 +103,7 @@ class AssetInstaller extends LibraryInstaller
      */
     protected function updateCode(PackageInterface $initial, PackageInterface $target)
     {
-        $target = AssetPlugin::addMainFiles($this->composer, $target);
+        $target = AssetPlugin::addMainFiles($this->config, $target);
 
         parent::updateCode($initial, $target);
 
@@ -108,7 +117,7 @@ class AssetInstaller extends LibraryInstaller
      */
     protected function deleteIgnoredFiles(PackageInterface $package)
     {
-        $manager = IgnoreFactory::create($this->composer, $package, $this->getInstallPath($package));
+        $manager = IgnoreFactory::create($this->config, $this->composer, $package, $this->getInstallPath($package));
 
         if ($manager->isEnabled() && !$manager->hasPattern()) {
             $this->addIgnorePatterns($manager, $package);

@@ -23,6 +23,7 @@ use Composer\Repository\Vcs\VcsDriverInterface;
 use Composer\Repository\VcsRepository;
 use Fxp\Composer\AssetPlugin\Assets;
 use Fxp\Composer\AssetPlugin\Converter\SemverConverter;
+use Fxp\Composer\AssetPlugin\Exception\InvalidArgumentException;
 use Fxp\Composer\AssetPlugin\Package\Loader\LazyAssetPackageLoader;
 use Fxp\Composer\AssetPlugin\Package\Version\VersionParser;
 use Fxp\Composer\AssetPlugin\Type\AssetTypeInterface;
@@ -45,9 +46,9 @@ abstract class AbstractAssetVcsRepository extends VcsRepository
     protected $versionParser;
 
     /**
-     * @var EventDispatcher
+     * @var AssetRepositoryManager
      */
-    protected $dispatcher;
+    protected $assetRepositoryManager;
 
     /**
      * @var LoaderInterface
@@ -87,7 +88,10 @@ abstract class AbstractAssetVcsRepository extends VcsRepository
         $repoConfig['package-name'] = $assetType->formatComposerName($repoConfig['name']);
         $repoConfig['filename'] = $assetType->getFilename();
         $this->assetType = $assetType;
-        $this->dispatcher = $dispatcher;
+        $this->assetRepositoryManager = isset($repoConfig['asset-repository-manager'])
+                && $repoConfig['asset-repository-manager'] instanceof AssetRepositoryManager
+            ? $repoConfig['asset-repository-manager']
+            : null;
         $this->filter = isset($repoConfig['vcs-package-filter'])
                 && $repoConfig['vcs-package-filter'] instanceof VcsPackageFilter
             ? $repoConfig['vcs-package-filter']
@@ -115,13 +119,13 @@ abstract class AbstractAssetVcsRepository extends VcsRepository
      *
      * @return VcsDriverInterface
      *
-     * @throws \InvalidArgumentException When not driver found
+     * @throws InvalidArgumentException When not driver found
      */
     protected function initDriver()
     {
         $driver = $this->getDriver();
         if (!$driver) {
-            throw new \InvalidArgumentException('No driver found to handle Asset VCS repository '.$this->url);
+            throw new InvalidArgumentException('No driver found to handle Asset VCS repository '.$this->url);
         }
 
         return $driver;
@@ -215,7 +219,7 @@ abstract class AbstractAssetVcsRepository extends VcsRepository
         $lazyLoader->setLoader($this->loader);
         $lazyLoader->setDriver(clone $driver);
         $lazyLoader->setIO($this->io);
-        $lazyLoader->setEventDispatcher($this->dispatcher);
+        $lazyLoader->setAssetRepositoryManager($this->assetRepositoryManager);
 
         return $lazyLoader;
     }
@@ -233,9 +237,10 @@ abstract class AbstractAssetVcsRepository extends VcsRepository
 
         // keep the name of the main identifier for all packages
         $data['name'] = $this->packageName ?: $data['name'];
-        $data = $this->assetType->getPackageConverter()->convert($data, $vcsRepos);
+        $data = (array) $this->assetType->getPackageConverter()->convert($data, $vcsRepos);
+        $this->assetRepositoryManager->addRepositories($vcsRepos);
 
-        return (array) $data;
+        return $this->assetRepositoryManager->solveResolutions($data);
     }
 
     /**
