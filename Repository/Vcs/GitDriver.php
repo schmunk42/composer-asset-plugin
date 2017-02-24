@@ -35,4 +35,19 @@ class GitDriver extends BaseGitDriver
 
         return ProcessUtil::getComposerInformation($this->cache, $this->infoCache, $this->repoConfig['asset-type'], $this->process, $identifier, $resource, sprintf('git show %s', $resource), sprintf('git log -1 --format=%%at %s', escapeshellarg($identifier)), $this->repoDir, '@');
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function initialize()
+    {
+        if (getenv('FXP_SKIP_ASSET_UPDATE')) {
+            $localUrl = $this->config->get('cache-vcs-dir') . '/' . preg_replace('{[^a-z0-9.]}i', '-', $this->url) . '/';
+            if (is_dir($localUrl) && filemtime($localUrl) > strtotime('-'.getenv('FXP_SKIP_ASSET_UPDATE'))) {
+                $this->io->write('Skipped updated for '.$localUrl.', using local clone...');
+                $this->url = $localUrl;
+            }
+        }
+        parent::initialize();
+    }
 }
