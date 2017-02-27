@@ -41,7 +41,7 @@ class GitDriver extends BaseGitDriver
      */
     public function initialize()
     {
-        if (getenv('FXP_SKIP_ASSET_UPDATE')) {
+        if (getenv('FXP_ASSET__GIT_SKIP_UPDATE') != 0) {
             $localUrl = $this->config->get('cache-vcs-dir') . '/' . preg_replace('{[^a-z0-9.]}i', '-', $this->url) . '/';
             if (is_dir($localUrl) && filemtime($localUrl) > strtotime('-'.getenv('FXP_SKIP_ASSET_UPDATE'))) {
                 $this->io->write('Skipped update for '.$localUrl.', using local clone...');
