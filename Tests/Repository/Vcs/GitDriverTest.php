@@ -102,6 +102,61 @@ class GitDriverTest extends \PHPUnit_Framework_TestCase
      * @param string $type
      * @param string $filename
      */
+    public function testPublicRepositoryWithSkipUpdate($type, $filename)
+    {
+        $repoUrl = 'https://github.com/fxpio/composer-asset-plugin.git';
+        $identifier = '92bebbfdcde75ef2368317830e54b605bc938123';
+        $io = $this->getMockBuilder('Composer\IO\IOInterface')->getMock();
+
+        $this->config->merge(array(
+            'config' => array(
+                'git-skip-update' => '1 week',
+            ),
+        ));
+
+        $repoConfig = array(
+            'url' => $repoUrl,
+            'asset-type' => $type,
+            'filename' => $filename,
+        );
+
+        $process = $this->getMockBuilder('Composer\Util\ProcessExecutor')->getMock();
+        $process->expects($this->any())
+            ->method('splitLines')
+            ->will($this->returnValue(array()));
+        $process->expects($this->any())
+            ->method('execute')
+            ->will($this->returnCallback(function ($command, &$output = null) use ($identifier, $repoConfig) {
+                if ($command === sprintf('git show %s', sprintf('%s:%s', escapeshellarg($identifier), $repoConfig['filename']))) {
+                    $output = '{"name": "foo"}';
+                } elseif (false !== strpos($command, 'git log')) {
+                    $date = new \DateTime(null, new \DateTimeZone('UTC'));
+                    $output = $date->getTimestamp();
+                }
+
+                return 0;
+            }));
+
+        /* @var IOInterface $io */
+        /* @var ProcessExecutor $process */
+
+        $gitDriver = new GitDriver($repoConfig, $io, $this->config, $process, null);
+        $gitDriver->initialize();
+
+        $validEmpty = array(
+            '_nonexistent_package' => true,
+        );
+
+        $this->assertNotNull($gitDriver->getComposerInformation($identifier));
+        $this->assertNotSame($validEmpty, $gitDriver->getComposerInformation($identifier));
+    }
+
+    /**
+     * @dataProvider getAssetTypes
+     *
+     * @param string $type
+     * @param string $filename
+     */
     public function testPublicRepositoryWithCodeCache($type, $filename)
     {
         $repoUrl = 'https://github.com/fxpio/composer-asset-plugin.git';
