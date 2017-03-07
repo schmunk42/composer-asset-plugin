@@ -109,8 +109,10 @@ class GitDriverTest extends \PHPUnit_Framework_TestCase
         $io = $this->getMockBuilder('Composer\IO\IOInterface')->getMock();
 
         $this->config->merge(array(
-            'config' => array(
-                'git-skip-update' => '1 week',
+            'fxp-asset' => array(
+                'git-driver' => array(
+                    'skip-update' => '1 week',
+                )
             ),
         ));
 
