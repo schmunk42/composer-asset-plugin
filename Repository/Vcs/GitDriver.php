@@ -12,6 +12,7 @@
 namespace Fxp\Composer\AssetPlugin\Repository\Vcs;
 
 use Composer\Cache;
+use Composer\IO\IOInterface;
 use Composer\Repository\Vcs\GitDriver as BaseGitDriver;
 
 /**
@@ -41,11 +42,16 @@ class GitDriver extends BaseGitDriver
      */
     public function initialize()
     {
-        if (getenv('FXP_ASSET__GIT_SKIP_UPDATE') != 0) {
-            $localUrl = $this->config->get('cache-vcs-dir') . '/' . preg_replace('{[^a-z0-9.]}i', '-', $this->url) . '/';
-            if (is_dir($localUrl) && filemtime($localUrl) > strtotime('-'.getenv('FXP_ASSET__GIT_SKIP_UPDATE'))) {
-                $this->io->write('Skipped update for '.$localUrl.', using local clone...');
-                $this->url = $localUrl;
+        if (isset($this->config->get('fxp-asset')['git-driver']['skip-update'])) {
+            $skip = $this->config->get('fxp-asset')['git-driver']['skip-update'];
+            if ($skip != 0) {
+                $localUrl = $this->config->get('cache-vcs-dir') . '/' . preg_replace('{[^a-z0-9.]}i', '-', $this->url) . '/';
+                if (is_dir($localUrl) && filemtime($localUrl) > strtotime('-'.$skip)) {
+                    $this->io->write('(<comment>local</comment>) ', false, IOInterface::VERBOSE);
+                    $this->url = $localUrl;
+                } else {
+                    $this->io->write('(<info>remote</info>) ', false, IOInterface::VERBOSE);
+                }
             }
         }
         parent::initialize();
