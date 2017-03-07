@@ -157,17 +157,18 @@ class LazyAssetPackageLoader implements LazyLoaderInterface
 
         $filename = $this->assetType->getFilename();
         $msg = 'Reading '.$filename.' of <info>'.$package->getName().'</info> (<comment>'.$package->getPrettyVersion().'</comment>)';
+
+        $this->io->write($msg, true, IOInterface::VERY_VERBOSE);
         if ($this->verbose) {
-            $this->io->write($msg);
         } else {
-            $this->io->overwrite($msg, false);
+            //$this->io->overwrite($msg, false);
         }
 
         $realPackage = $this->loadRealPackage($package);
         $this->cache[$package->getUniqueName()] = $realPackage;
 
         if (!$this->verbose) {
-            $this->io->overwrite('', false);
+            //$this->io->overwrite('', false);
         }
 
         return $realPackage;
@@ -204,7 +205,9 @@ class LazyAssetPackageLoader implements LazyLoaderInterface
             $data = $this->preProcess($this->driver, $this->validateData($data), $this->identifier);
 
             if ($this->verbose) {
-                $this->io->write('Importing '.($valid ? '' : 'empty ').$this->type.' '.$data['version'].' ('.$data['version_normalized'].')');
+                $this->io->write('+', false, IOInterface::VERBOSE);
+                $this->io->write('Importing '.($valid ? '' : 'empty ').$this->type.' '.$data['version'].' ('.$data['version_normalized'].')', true, IOInterface::VERY_VERBOSE);
+            } else {
             }
 
             /* @var CompletePackageInterface $realPackage */
@@ -263,6 +266,7 @@ class LazyAssetPackageLoader implements LazyLoaderInterface
         if (!isset($data['source'])) {
             $data['source'] = $driver->getSource($identifier);
         }
+        //$this->io->write('');
 
         return $this->assetRepositoryManager->solveResolutions((array) $data);
     }

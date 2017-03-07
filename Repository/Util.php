@@ -72,7 +72,6 @@ class Util
                 $notAddedRepo = null;
             }
         }
-
         return $notAddedRepo;
     }
 
@@ -133,7 +132,10 @@ class Util
     protected static function writeAddRepository(IOInterface $io, $name)
     {
         if ($io->isVerbose()) {
-            $io->write('Adding VCS repository <info>'.$name.'</info>');
+            $io->write('', true);
+            $io->write('Adding VCS repository <info>'.$name.'</info> ', false);
+        } else {
+            $io->write('.', false);
         }
     }
 }

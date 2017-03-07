@@ -1,0 +1,4 @@
+php:
+  image: dmstr/php-yii2
+  volumes:
+    - ./:/app

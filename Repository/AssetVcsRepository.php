@@ -77,7 +77,7 @@ class AssetVcsRepository extends AbstractAssetVcsRepository
         }
 
         if (!$this->verbose) {
-            $this->io->overwrite('', false);
+            //$this->io->overwrite('', false);
         }
     }
 
@@ -154,7 +154,7 @@ class AssetVcsRepository extends AbstractAssetVcsRepository
         }
 
         if (!$this->verbose) {
-            $this->io->overwrite('', false);
+            //$this->io->overwrite('', false);
         }
     }
 
